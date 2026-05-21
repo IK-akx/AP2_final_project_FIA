@@ -8,6 +8,7 @@ import (
 
 	grpchandler "github.com/IK-akx/AP2_final_project_FIA/user/internal/adapters/grpc"
 	"github.com/IK-akx/AP2_final_project_FIA/user/internal/adapters/postgres"
+	redisAdapter "github.com/IK-akx/AP2_final_project_FIA/user/internal/adapters/redis"
 	"github.com/IK-akx/AP2_final_project_FIA/user/internal/usecase"
 	userpb "github.com/IK-akx/pharmacy-proto-gen/user"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -15,10 +16,11 @@ import (
 )
 
 func main() {
-	log.Println("Starting user-service...")
+	log.Println("Starting user-service")
 
 	dbURL := getEnv("DATABASE_URL", "postgres://postgres:postgres@localhost:5435/user_db?sslmode=disable")
 	grpcPort := getEnv("GRPC_PORT", "50053")
+	redisAddr := getEnv("REDIS_ADDR", "localhost:6382")
 
 	db, err := pgxpool.New(context.Background(), dbURL)
 	if err != nil {
@@ -31,10 +33,19 @@ func main() {
 	}
 	log.Println("Postgres connected")
 
+	redisCache, err := redisAdapter.NewCache(redisAddr)
+	if err != nil {
+		log.Printf("Redis connection warning: %v ", err)
+		redisCache = nil
+	} else {
+		log.Println("Redis connected!")
+	}
+
 	userRepo := postgres.NewUserRepo(db)
+
 	registerUC := usecase.NewRegisterUseCase(userRepo)
 	loginUC := usecase.NewLoginUseCase(userRepo)
-	profileUC := usecase.NewProfileUseCase(userRepo)
+	profileUC := usecase.NewProfileUseCase(userRepo, redisCache)
 
 	handler := grpchandler.NewUserHandler(registerUC, loginUC, profileUC)
 
