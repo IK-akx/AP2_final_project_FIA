@@ -40,3 +40,30 @@ type OrderStats struct {
 	TotalRevenue   float64
 	OrdersByStatus map[string]int32
 }
+
+// IsValidTransition checks if the status transition is allowed
+func (o *Order) IsValidTransition(newStatus string) bool {
+	validTransitions := map[string][]string{
+		StatusPending:   {StatusConfirmed, StatusCancelled},
+		StatusConfirmed: {StatusCancelled, StatusDelivered},
+		StatusCancelled: {},
+		StatusDelivered: {},
+	}
+
+	allowed, exists := validTransitions[o.Status]
+	if !exists {
+		return false
+	}
+
+	for _, s := range allowed {
+		if s == newStatus {
+			return true
+		}
+	}
+	return false
+}
+
+// CanBeCancelled returns true if the order can be cancelled
+func (o *Order) CanBeCancelled() bool {
+	return o.Status == StatusConfirmed
+}
