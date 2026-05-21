@@ -63,3 +63,29 @@ func generateJWT(userID, role string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(secret))
 }
+func (uc *LoginUseCase) GenerateToken(userID, role string) (string, error) {
+	return generateJWT(userID, role)
+}
+
+func (uc *LoginUseCase) ValidateToken(tokenStr string) (string, string, error) {
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		secret = "secret"
+	}
+
+	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
+		return []byte(secret), nil
+	})
+	if err != nil || !token.Valid {
+		return "", "", errors.New("invalid token")
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return "", "", errors.New("invalid claims")
+	}
+
+	userID := claims["user_id"].(string)
+	role := claims["role"].(string)
+	return userID, role, nil
+}
