@@ -41,3 +41,5 @@ vendor/
 # IMPORTANT: Do NOT ignore proto/gen/
 # Generated proto files must be committed to git
 # !/proto/gen/
+
+!/order/proto/gen/

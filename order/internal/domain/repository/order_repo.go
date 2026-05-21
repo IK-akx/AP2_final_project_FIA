@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"github.com/IKakx/AP2_FINAL_PROJECT/order/internal/domain/entity"
+	"github.com/IK-akx/AP2_FINAL_PROJECT/order/internal/domain/entity"
 	"github.com/google/uuid"
 )
 
