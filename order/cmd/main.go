@@ -13,6 +13,7 @@ import (
 	"github.com/IK-akx/AP2_FINAL_PROJECT/order/internal/repository/postgres"
 	rediscache "github.com/IK-akx/AP2_FINAL_PROJECT/order/internal/repository/redis"
 	"github.com/IK-akx/AP2_FINAL_PROJECT/order/pkg/logger"
+	"github.com/IK-akx/AP2_FINAL_PROJECT/order/pkg/tracer"
 	"github.com/jackc/pgx/v5/pgxpool"
 	goredis "github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
@@ -35,6 +36,19 @@ func main() {
 	defer logger.Sync()
 
 	log.Info("starting order service")
+
+	// Initialize tracing
+	tp, err := tracer.Init("order-service", cfg.JaegerEndpoint)
+	if err != nil {
+		log.Warn("failed to init tracing", zap.Error(err))
+	} else {
+		defer func() {
+			if err := tp.Shutdown(context.Background()); err != nil {
+				log.Error("failed to shutdown tracer", zap.Error(err))
+			}
+		}()
+		log.Info("tracing initialized")
+	}
 
 	// Connect to PostgreSQL
 	pool, err := pgxpool.New(context.Background(), cfg.DSN())
@@ -85,7 +99,7 @@ func main() {
 
 	// Start gRPC server
 	grpcAddr := fmt.Sprintf(":%s", cfg.GRPCPort)
-	grpcServer, err := grpc.NewServer(grpcAddr, orderSvc, balanceSvc, log)
+	grpcServer, err := grpc.NewServer(grpcAddr, orderSvc, balanceSvc, log, cfg.PrometheusPort)
 	if err != nil {
 		log.Fatal("failed to create gRPC server", zap.Error(err))
 	}
