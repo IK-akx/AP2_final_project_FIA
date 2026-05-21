@@ -1,0 +1,43 @@
+# Environment variables
+order/.env
+
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/
+dist/
+
+# Test binary
+*.test
+
+# IDE
+../.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Coverage
+coverage.out
+coverage.html
+
+# Go workspace
+go.work
+go.work.sum
+
+# Docker
+docker-compose.override.yml
+
+# Dependency directories
+vendor/
+
+# IMPORTANT: Do NOT ignore proto/gen/
+# Generated proto files must be committed to git
+# !/proto/gen/
