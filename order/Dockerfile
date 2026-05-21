@@ -1,4 +1,23 @@
-FROM ubuntu:latest
-LABEL authors="kusta"
+FROM golang:1.22-alpine AS builder
 
-ENTRYPOINT ["top", "-b"]
+WORKDIR /app
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+RUN CGO_ENABLED=0 GOOS=linux go build -o /order-service cmd/main.go
+
+FROM alpine:3.19
+
+RUN apk --no-cache add ca-certificates
+
+WORKDIR /app
+
+COPY --from=builder /order-service .
+COPY --from=builder /app/migrations ./migrations
+
+EXPOSE 50052
+
+CMD ["./order-service"]
