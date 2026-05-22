@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pharmacy</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="header">
+    <strong>Pharmacy</strong>
+    <div id="nav">
+        <a href="#" onclick="showPage('catalog')">Catalog</a>
+        <a href="#" onclick="showPage('orders')">My Orders</a>
+        <a href="#" onclick="showPage('profile')">Profile</a>
+        <a href="#" id="logoutBtn" class="hidden" onclick="logout()">Logout</a>
+    </div>
+</div>
+
+<div class="container" id="app"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

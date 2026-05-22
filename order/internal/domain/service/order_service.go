@@ -59,8 +59,10 @@ func (s *OrderSvc) CreateOrder(ctx context.Context, userID uuid.UUID, items []Cr
 				item.ProductID, item.Quantity, currentStock)
 		}
 
-		// For MVP, we use a placeholder price (will be fetched from Product Service later)
-		price := 100.0 // TODO: get real price from Product Service
+		price, err := s.productSvc.GetProductPrice(ctx, item.ProductID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get price for product %s: %w", item.ProductID, err)
+		}
 
 		total += price * float64(item.Quantity)
 		orderItems[i] = &entity.OrderItem{
@@ -152,6 +154,10 @@ func (s *OrderSvc) CreateOrder(ctx context.Context, userID uuid.UUID, items []Cr
 			zap.String("order_id", order.ID.String()),
 			zap.Error(err),
 		)
+	}
+
+	if err := s.cache.InvalidateUserOrders(ctx, userID); err != nil {
+		s.logger.Warn("failed to invalidate cache", zap.Error(err))
 	}
 
 	return order, nil

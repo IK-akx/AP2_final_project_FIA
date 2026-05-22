@@ -71,3 +71,13 @@ func (c *ProductClient) UpdateStock(ctx context.Context, productID uuid.UUID, de
 
 	return nil
 }
+
+func (c *ProductClient) GetProductPrice(ctx context.Context, productID uuid.UUID) (float64, error) {
+	resp, err := c.client.GetProduct(ctx, &productpb.GetProductRequest{
+		Id: productID.String(),
+	})
+	if err != nil {
+		return 0, fmt.Errorf("failed to get product: %w", err)
+	}
+	return resp.Product.Price, nil
+}

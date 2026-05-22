@@ -14,6 +14,7 @@ type ProductServiceClient interface {
 
 	// UpdateStock updates product stock (negative = decrease, positive = increase)
 	UpdateStock(ctx context.Context, productID uuid.UUID, delta int32) error
+	GetProductPrice(ctx context.Context, productID uuid.UUID) (float64, error)
 }
 
 // NATSPublisher defines the interface for NATS event publishing
