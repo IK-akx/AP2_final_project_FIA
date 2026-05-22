@@ -1,11 +1,10 @@
 module github.com/IK-akx/AP2_FINAL_PROJECT/api-gateway
 
-go 1.25.5
+go 1.25.0
 
 require (
-	github.com/IK-akx/pharmacy-proto-gen v0.0.0-20260521205622-e38cc3cb4f3a
+	github.com/IK-akx/pharmacy-proto-gen v0.0.0-20260522084911-88127fc7fab9
 	github.com/gin-gonic/gin v1.12.0
-	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/joho/godotenv v1.5.1
 	go.uber.org/zap v1.28.0
 	google.golang.org/grpc v1.81.1

@@ -31,7 +31,10 @@ func main() {
 		logger.Fatal("failed to connect to user service", zap.Error(err))
 	}
 
-	productHandler := handlers.NewProductHandler()
+	productHandler, err := handlers.NewProductHandler(cfg.ProductServiceAddr, logger)
+	if err != nil {
+		logger.Fatal("failed to connect to product service", zap.Error(err))
+	}
 
 	r := gin.Default()
 
