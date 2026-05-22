@@ -109,6 +109,11 @@ func (m *MockProductClient) CheckAvailability(ctx context.Context, productID uui
 	return args.Bool(0), args.Get(1).(int32), args.Error(2)
 }
 
+func (m *MockProductClient) GetProductPrice(ctx context.Context, productID uuid.UUID) (float64, error) {
+	args := m.Called(ctx, productID)
+	return args.Get(0).(float64), args.Error(1)
+}
+
 func (m *MockProductClient) UpdateStock(ctx context.Context, productID uuid.UUID, delta int32) error {
 	args := m.Called(ctx, productID, delta)
 	return args.Error(0)
