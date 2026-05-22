@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"os"
+	"strconv"
 
 	mail "github.com/go-mail/mail/v2"
 )
@@ -15,9 +16,14 @@ type EmailSender struct {
 
 func NewEmailSender() *EmailSender {
 	host := os.Getenv("SMTP_HOST")
+
 	port := 587
 	if v := os.Getenv("SMTP_PORT"); v != "" {
+		if p, err := strconv.Atoi(v); err == nil {
+			port = p
+		}
 	}
+
 	user := os.Getenv("SMTP_USER")
 	pass := os.Getenv("SMTP_PASS")
 

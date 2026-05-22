@@ -25,13 +25,17 @@ type OrderServiceClient interface {
 
 type RegisterUseCase struct {
 	repo        ports.UserRepository
-	orderClient OrderServiceClient // NEW
+	orderClient OrderServiceClient
 }
 
-func NewRegisterUseCase(repo ports.UserRepository, orderClient OrderServiceClient) *RegisterUseCase {
+func NewRegisterUseCase(repo ports.UserRepository, orderClient ...OrderServiceClient) *RegisterUseCase {
+	var client OrderServiceClient
+	if len(orderClient) > 0 {
+		client = orderClient[0]
+	}
 	return &RegisterUseCase{
 		repo:        repo,
-		orderClient: orderClient,
+		orderClient: client,
 	}
 }
 
@@ -69,7 +73,6 @@ func (uc *RegisterUseCase) Execute(ctx context.Context, email, password, firstNa
 		return nil, err
 	}
 
-	// NEW
 	if uc.orderClient != nil {
 		if err := uc.orderClient.InitBalance(ctx, user.ID); err != nil {
 			log.Printf("Warning: failed to init balance for user %s: %v", user.ID, err)
