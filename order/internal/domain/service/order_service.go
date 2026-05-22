@@ -79,7 +79,6 @@ func (s *OrderSvc) CreateOrder(ctx context.Context, userID uuid.UUID, items []Cr
 		Total:  total,
 	}
 
-	// Начинаем транзакцию
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
@@ -126,7 +125,6 @@ func (s *OrderSvc) CreateOrder(ctx context.Context, userID uuid.UUID, items []Cr
 		return nil, fmt.Errorf("failed to record transaction: %w", err)
 	}
 
-	// Commit транзакции
 	if err := tx.Commit(ctx); err != nil {
 		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}
@@ -144,7 +142,6 @@ func (s *OrderSvc) CreateOrder(ctx context.Context, userID uuid.UUID, items []Cr
 	}
 
 	// Step 11 (after commit): Publish NATS event
-	// Конвертируем []*entity.OrderItem → []entity.OrderItem для поля Items
 	order.Items = make([]entity.OrderItem, len(orderItems))
 	for i, item := range orderItems {
 		order.Items[i] = *item
