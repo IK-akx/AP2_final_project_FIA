@@ -3,7 +3,7 @@ module github.com/IK-akx/AP2_FINAL_PROJECT/order
 go 1.25.5
 
 require (
-	github.com/IK-akx/pharmacy-proto-gen v0.0.0-20260521194921-4844a8ee0c16
+	github.com/IK-akx/pharmacy-proto-gen v0.0.0-20260522065232-95649dc2f73b
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.9.2
 	github.com/joho/godotenv v1.5.1

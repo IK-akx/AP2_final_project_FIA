@@ -45,6 +45,9 @@ type BalanceService interface {
 	// TopUpBalance adds funds to user balance
 	TopUpBalance(ctx context.Context, userID uuid.UUID, amount float64) (*entity.UserBalance, error)
 
+	// InitBalance
+	InitBalance(ctx context.Context, userID uuid.UUID) error
+
 	// GetTransactionHistory retrieves transaction history for a user
 	GetTransactionHistory(ctx context.Context, userID uuid.UUID, page, limit int32) ([]*entity.Transaction, int32, error)
 }
