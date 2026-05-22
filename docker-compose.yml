@@ -153,8 +153,8 @@ services:
       ORDER_SERVICE_ADDR: order-service:50052
       SMTP_HOST: smtp.gmail.com
       SMTP_PORT: "587"
-      SMTP_USER: your-email@gmail.com
-      SMTP_PASS: your-app-password
+      SMTP_USER: kustaev.iskander12@gmail.com
+      SMTP_PASS: bopv hfng tyqp jqdw
     depends_on:
       postgres-user:
         condition: service_healthy
