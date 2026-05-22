@@ -33,7 +33,6 @@ func NewUserHandler(userServiceAddr string, logger *zap.Logger) (*UserHandler, e
 	}, nil
 }
 
-// Register — POST /auth/register
 func (h *UserHandler) Register(c *gin.Context) {
 	var req userpb.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -54,7 +53,6 @@ func (h *UserHandler) Register(c *gin.Context) {
 	c.JSON(http.StatusCreated, resp)
 }
 
-// Login — POST /auth/login
 func (h *UserHandler) Login(c *gin.Context) {
 	var req userpb.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -75,7 +73,6 @@ func (h *UserHandler) Login(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-// GetProfile — GET /users/profile
 func (h *UserHandler) GetProfile(c *gin.Context) {
 	userID := c.GetString("user_id")
 	if userID == "" {
@@ -98,7 +95,6 @@ func (h *UserHandler) GetProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-// ValidateToken — вызывает User Service для проверки JWT
 func (h *UserHandler) ValidateToken(c *gin.Context) {
 	token := c.GetString("raw_token") // из middleware
 	if token == "" {
@@ -122,4 +118,39 @@ func (h *UserHandler) ValidateToken(c *gin.Context) {
 	c.Set("user_id", resp.UserId)
 	c.Set("role", resp.Role)
 	c.Next()
+}
+
+func (h *UserHandler) UpdateProfile(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "user not authenticated"})
+		return
+	}
+
+	var body struct {
+		FirstName string `json:"first_name"`
+		LastName  string `json:"last_name"`
+		Phone     string `json:"phone"`
+	}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+	defer cancel()
+
+	resp, err := h.client.UpdateUserProfile(ctx, &userpb.UpdateProfileRequest{
+		UserId:    userID,
+		FirstName: body.FirstName,
+		LastName:  body.LastName,
+		Phone:     body.Phone,
+	})
+	if err != nil {
+		h.logger.Error("update profile failed", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
 }

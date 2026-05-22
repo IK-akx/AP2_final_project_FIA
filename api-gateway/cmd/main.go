@@ -62,6 +62,7 @@ func main() {
 		api.PUT("/orders/:id/cancel", orderHandler.CancelOrder)
 
 		api.GET("/users/profile", userHandler.GetProfile)
+		api.PUT("/users/profile", userHandler.UpdateProfile)
 		api.GET("/users/:id/balance", orderHandler.GetBalance)
 	}
 
