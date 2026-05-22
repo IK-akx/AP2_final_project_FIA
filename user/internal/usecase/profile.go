@@ -23,11 +23,14 @@ func NewProfileUseCase(repo ports.UserRepository, cache ports.Cache) *ProfileUse
 
 func (uc *ProfileUseCase) GetProfile(ctx context.Context, userID string) (*domain.User, error) {
 	cacheKey := "profile:" + userID
-	cached, err := uc.cache.Get(ctx, cacheKey)
-	if err == nil {
-		var user domain.User
-		if err := json.Unmarshal(cached, &user); err == nil {
-			return &user, nil
+
+	if uc.cache != nil {
+		cached, err := uc.cache.Get(ctx, cacheKey)
+		if err == nil {
+			var user domain.User
+			if err := json.Unmarshal(cached, &user); err == nil {
+				return &user, nil
+			}
 		}
 	}
 
@@ -36,8 +39,10 @@ func (uc *ProfileUseCase) GetProfile(ctx context.Context, userID string) (*domai
 		return nil, ErrProfileNotFound
 	}
 
-	data, _ := json.Marshal(user)
-	_ = uc.cache.Set(ctx, cacheKey, data, 300)
+	if uc.cache != nil {
+		data, _ := json.Marshal(user)
+		_ = uc.cache.Set(ctx, cacheKey, data, 300)
+	}
 
 	return user, nil
 }
@@ -57,8 +62,10 @@ func (uc *ProfileUseCase) UpdateProfile(ctx context.Context, userID, firstName, 
 		return nil, err
 	}
 
-	cacheKey := "profile:" + userID
-	_ = uc.cache.Delete(ctx, cacheKey)
+	if uc.cache != nil {
+		cacheKey := "profile:" + userID
+		_ = uc.cache.Delete(ctx, cacheKey)
+	}
 
 	return user, nil
 }

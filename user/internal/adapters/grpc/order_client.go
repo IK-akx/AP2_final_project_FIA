@@ -10,6 +10,7 @@ import (
 )
 
 type OrderClient struct {
+	conn   *grpc.ClientConn
 	client orderpb.OrderServiceClient
 }
 
@@ -22,11 +23,15 @@ func NewOrderClient(addr string) (*OrderClient, error) {
 	}
 
 	return &OrderClient{
+		conn:   conn,
 		client: orderpb.NewOrderServiceClient(conn),
 	}, nil
 }
 
-// InitBalance вызывает InitBalance в Order Service для создания начального баланса
+func (c *OrderClient) Close() error {
+	return c.conn.Close()
+}
+
 func (c *OrderClient) InitBalance(ctx context.Context, userID string) error {
 	_, err := c.client.InitBalance(ctx, &orderpb.InitBalanceRequest{
 		UserId: userID,
