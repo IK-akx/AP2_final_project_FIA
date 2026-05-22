@@ -1,5 +1,5 @@
 
-FROM golang:1.24-alpine AS builder
+FROM golang:1.25-alpine AS builder
 
 RUN apk add --no-cache git ca-certificates
 
@@ -36,6 +36,5 @@ RUN chown -R appuser:appgroup /app
 USER appuser
 
 EXPOSE 50053
-
 
 ENTRYPOINT ["./user-service"]
