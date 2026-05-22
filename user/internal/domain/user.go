@@ -8,17 +8,19 @@ type User struct {
 	PasswordHash string
 	FirstName    string
 	LastName     string
+	Phone        string
 	Role         string
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 }
 
 type NotificationLog struct {
-	ID      string
-	UserID  string
-	Type    string
-	Subject string
-	Body    string
-	SentAt  time.Time
-	Status  string
+	ID       string
+	UserID   string
+	Type     string
+	Subject  string
+	Body     string
+	SentAt   time.Time
+	Status   string
+	ErrorMsg string
 }

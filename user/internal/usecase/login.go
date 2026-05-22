@@ -40,7 +40,7 @@ func (uc *LoginUseCase) Execute(ctx context.Context, email, password string) (*L
 		return nil, ErrWrongPassword
 	}
 
-	token, err := generateJWT(user.ID, user.Role)
+	token, err := uc.GenerateToken(user.ID, user.Role)
 	if err != nil {
 		return nil, err
 	}
@@ -48,21 +48,6 @@ func (uc *LoginUseCase) Execute(ctx context.Context, email, password string) (*L
 	return &LoginResult{User: user, Token: token}, nil
 }
 
-func generateJWT(userID, role string) (string, error) {
-	secret := os.Getenv("JWT_SECRET")
-	if secret == "" {
-		secret = "secret"
-	}
-
-	claims := jwt.MapClaims{
-		"user_id": userID,
-		"role":    role,
-		"exp":     time.Now().Add(24 * time.Hour).Unix(),
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(secret))
-}
 func (uc *LoginUseCase) GenerateToken(userID, role string) (string, error) {
 	return generateJWT(userID, role)
 }
@@ -85,7 +70,31 @@ func (uc *LoginUseCase) ValidateToken(tokenStr string) (string, string, error) {
 		return "", "", errors.New("invalid claims")
 	}
 
-	userID := claims["user_id"].(string)
-	role := claims["role"].(string)
+	userID, ok := claims["user_id"].(string)
+	if !ok {
+		return "", "", errors.New("user_id not found in token")
+	}
+
+	role, ok := claims["role"].(string)
+	if !ok {
+		return "", "", errors.New("role not found in token")
+	}
+
 	return userID, role, nil
+}
+
+func generateJWT(userID, role string) (string, error) {
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		secret = "secret"
+	}
+
+	claims := jwt.MapClaims{
+		"user_id": userID,
+		"role":    role,
+		"exp":     time.Now().Add(24 * time.Hour).Unix(),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(secret))
 }

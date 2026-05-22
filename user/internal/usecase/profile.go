@@ -50,6 +50,7 @@ func (uc *ProfileUseCase) UpdateProfile(ctx context.Context, userID, firstName, 
 
 	user.FirstName = firstName
 	user.LastName = lastName
+	user.Phone = phone
 	user.UpdatedAt = time.Now()
 
 	if err := uc.repo.Update(ctx, *user); err != nil {

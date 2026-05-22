@@ -50,6 +50,7 @@ func (uc *RegisterUseCase) Execute(ctx context.Context, email, password, firstNa
 		PasswordHash: string(hash),
 		FirstName:    firstName,
 		LastName:     lastName,
+		Phone:        "",
 		Role:         "user",
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
