@@ -8,8 +8,8 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	pb "github.com/IK-akx/pharmacy-proto-gen/product"
 	"github.com/fxrnweh9/product-service/internal/domain"
-	pb "github.com/fxrnweh9/product-service/proto/v1"
 )
 
 type ProductHandler struct {
@@ -71,28 +71,26 @@ func (h *ProductHandler) ListProducts(ctx context.Context, req *pb.ListProductsR
 }
 
 func (h *ProductHandler) CheckAvailability(ctx context.Context, req *pb.CheckAvailabilityRequest) (*pb.AvailabilityResponse, error) {
-	ok, stock, err := h.svc.CheckAvailability(ctx, req.ProductId, int(req.RequestedQuantity))
+	ok, stock, err := h.svc.CheckAvailability(ctx, req.ProductId, int(req.Quantity))
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &pb.AvailabilityResponse{
-		ProductId:    req.ProductId,
-		IsAvailable:  ok,
+		Available:    ok,
 		CurrentStock: int32(stock),
 	}, nil
 }
 
 func (h *ProductHandler) UpdateStock(ctx context.Context, req *pb.UpdateStockRequest) (*pb.StockResponse, error) {
-	old, newStock, err := h.svc.UpdateStock(ctx, req.ProductId, int(req.QuantityChange))
+	_, newStock, err := h.svc.UpdateStock(ctx, req.ProductId, int(req.QuantityDelta))
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &pb.StockResponse{
-		ProductId: req.ProductId,
-		OldStock:  int32(old),
-		NewStock:  int32(newStock),
+		Success:  true,
+		NewStock: int32(newStock),
 	}, nil
 }
 

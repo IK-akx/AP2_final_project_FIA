@@ -34,6 +34,23 @@ services:
       timeout: 5s
       retries: 5
 
+  postgres-product:
+    image: postgres:16-alpine
+    container_name: product-postgres
+    environment:
+      POSTGRES_DB: product_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - product-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d product_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   # === Redis ===
   redis-order:
     image: redis:7-alpine
@@ -61,7 +78,20 @@ services:
       timeout: 3s
       retries: 5
 
-  # === NATS (общий) ===
+  redis-product:
+    image: redis:7-alpine
+    container_name: product-redis
+    ports:
+      - "6380:6379"
+    volumes:
+      - product-redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # === NATS ===
   nats:
     image: nats:2.10-alpine
     container_name: nats
@@ -69,11 +99,6 @@ services:
       - "4222:4222"
       - "8222:8222"
     command: "-js"
-    healthcheck:
-      test: ["CMD", "nats", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
 
   # === Order Service ===
   order-service:
@@ -107,7 +132,7 @@ services:
       redis-order:
         condition: service_healthy
       nats:
-        condition: service_healthy
+        condition: service_started
 
   # === User Service ===
   user-service:
@@ -136,9 +161,49 @@ services:
       redis-user:
         condition: service_healthy
       nats:
-        condition: service_healthy
+        condition: service_started
       order-service:
         condition: service_started
+
+  # === Product Service ===
+  product-service:
+    build:
+      context: ./product
+      dockerfile: Dockerfile
+    container_name: product-service
+    ports:
+      - "50051:50051"
+    environment:
+      POSTGRES_DSN: postgres://postgres:postgres@postgres-product:5432/product_db?sslmode=disable
+      REDIS_ADDR: redis-product:6379
+      NATS_URL: nats://nats:4222
+      GRPC_PORT: ":50051"
+    depends_on:
+      postgres-product:
+        condition: service_healthy
+      redis-product:
+        condition: service_started
+      nats:
+        condition: service_started
+
+  # === API Gateway ===
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: "8080"
+      JWT_SECRET: super-secret-key-change-in-production
+      ORDER_SERVICE_ADDR: order-service:50052
+      PRODUCT_SERVICE_ADDR: product-service:50051
+      USER_SERVICE_ADDR: user-service:50053
+    depends_on:
+      - order-service
+      - product-service
+      - user-service
 
   # === Observability ===
   prometheus:
@@ -173,5 +238,7 @@ services:
 volumes:
   order-pgdata:
   user-pgdata:
+  product-pgdata:
   order-redisdata:
   user-redisdata:
+  product-redisdata:

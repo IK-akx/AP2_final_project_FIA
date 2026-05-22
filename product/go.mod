@@ -1,8 +1,9 @@
 module github.com/fxrnweh9/product-service
 
-go 1.26.3
+go 1.25.0
 
 require (
+	github.com/IK-akx/pharmacy-proto-gen v0.0.0-20260522084911-88127fc7fab9
 	github.com/google/uuid v1.6.0
 	github.com/lib/pq v1.12.3
 	github.com/nats-io/nats.go v1.52.0

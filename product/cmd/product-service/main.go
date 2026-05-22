@@ -14,7 +14,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	pb "github.com/fxrnweh9/product-service/proto/v1"
+	pb "github.com/IK-akx/pharmacy-proto-gen/product"
 )
 
 func main() {
