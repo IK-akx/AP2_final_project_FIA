@@ -21,50 +21,47 @@ func main() {
 	logger, _ := zap.NewProduction()
 	defer logger.Sync()
 
-	// Initialize handlers
 	orderHandler, err := handlers.NewOrderHandler(cfg.OrderServiceAddr, logger)
 	if err != nil {
 		logger.Fatal("failed to connect to order service", zap.Error(err))
 	}
 
-	productHandler := handlers.NewProductHandler()
-	userHandler := handlers.NewUserHandler()
+	userHandler, err := handlers.NewUserHandler(cfg.UserServiceAddr, logger)
+	if err != nil {
+		logger.Fatal("failed to connect to user service", zap.Error(err))
+	}
 
-	// Setup Gin router
+	productHandler := handlers.NewProductHandler()
+
 	r := gin.Default()
 
-	// Health check
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "ok"})
 	})
 
-	// Public routes (no auth)
+	// Public routes
 	auth := r.Group("/auth")
 	{
 		auth.POST("/register", userHandler.Register)
 		auth.POST("/login", userHandler.Login)
 	}
 
-	// Protected routes (JWT required)
+	// Protected routes
 	api := r.Group("/")
-	api.Use(middleware.JWTAuth(cfg.JWTSecret))
+	api.Use(middleware.JWTAuth(cfg.UserServiceAddr))
 	{
-		// Products
 		api.GET("/products", productHandler.ListProducts)
 		api.GET("/products/:id", productHandler.GetProduct)
 
-		// Orders ← ТВОЙ РАБОЧИЙ СЕРВИС
 		api.POST("/orders", orderHandler.CreateOrder)
 		api.GET("/orders/:id", orderHandler.GetOrder)
 		api.GET("/orders/user/:userId", orderHandler.GetUserOrders)
 		api.PUT("/orders/:id/cancel", orderHandler.CancelOrder)
 
-		// Users
 		api.GET("/users/profile", userHandler.GetProfile)
-		api.GET("/users/:id/balance", orderHandler.GetBalance) // баланс из Order Service
+		api.GET("/users/:id/balance", orderHandler.GetBalance)
 	}
 
-	// Start
 	addr := fmt.Sprintf(":%s", cfg.Port)
 	logger.Info("API Gateway starting", zap.String("addr", addr))
 	if err := r.Run(addr); err != nil {

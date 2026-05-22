@@ -1,5 +1,5 @@
 services:
-  # === Order Service Infrastructure ===
+  # === PostgreSQL ===
   postgres-order:
     image: postgres:16-alpine
     container_name: order-postgres
@@ -17,6 +17,24 @@ services:
       timeout: 5s
       retries: 5
 
+  postgres-user:
+    image: postgres:16-alpine
+    container_name: user-postgres
+    environment:
+      POSTGRES_DB: user_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5435:5432"
+    volumes:
+      - user-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d user_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # === Redis ===
   redis-order:
     image: redis:7-alpine
     container_name: order-redis
@@ -30,6 +48,20 @@ services:
       timeout: 3s
       retries: 5
 
+  redis-user:
+    image: redis:7-alpine
+    container_name: user-redis
+    ports:
+      - "6382:6379"
+    volumes:
+      - user-redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # === NATS (общий) ===
   nats:
     image: nats:2.10-alpine
     container_name: nats
@@ -77,7 +109,38 @@ services:
       nats:
         condition: service_healthy
 
-  # === Observability (Bonus) ===
+  # === User Service ===
+  user-service:
+    build:
+      context: ./user
+      dockerfile: Dockerfile
+    container_name: user-service
+    ports:
+      - "50053:50053"
+      - "9091:9091"
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres-user:5432/user_db?sslmode=disable
+      GRPC_PORT: "50053"
+      METRICS_PORT: "9091"
+      REDIS_ADDR: redis-user:6379
+      NATS_URL: nats://nats:4222
+      JWT_SECRET: change-me-in-production
+      ORDER_SERVICE_ADDR: order-service:50052
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: "587"
+      SMTP_USER: your-email@gmail.com
+      SMTP_PASS: your-app-password
+    depends_on:
+      postgres-user:
+        condition: service_healthy
+      redis-user:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+      order-service:
+        condition: service_started
+
+  # === Observability ===
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
@@ -109,4 +172,6 @@ services:
 
 volumes:
   order-pgdata:
+  user-pgdata:
   order-redisdata:
+  user-redisdata:

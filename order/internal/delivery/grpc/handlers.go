@@ -145,6 +145,20 @@ func (h *OrderHandler) GetUserBalance(ctx context.Context, req *orderpb.GetBalan
 	}, nil
 }
 
+// InitBalance — вызывает User Service при регистрации
+func (h *OrderHandler) InitBalance(ctx context.Context, req *orderpb.InitBalanceRequest) (*orderpb.InitBalanceResponse, error) {
+	userID, err := uuid.Parse(req.UserId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid user_id: %v", err)
+	}
+
+	if err := h.balanceSvc.InitBalance(ctx, userID); err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to init balance: %v", err)
+	}
+
+	return &orderpb.InitBalanceResponse{Success: true}, nil
+}
+
 // === Helper functions ===
 
 func orderToProto(order *entity.Order) *orderpb.OrderResponse {

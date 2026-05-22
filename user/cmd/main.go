@@ -32,6 +32,7 @@ func main() {
 	metricsPort := getEnv("METRICS_PORT", "9091")
 	redisAddr := getEnv("REDIS_ADDR", "localhost:6382")
 	natsURL := getEnv("NATS_URL", "nats://localhost:4222")
+	orderServiceAddr := getEnv("ORDER_SERVICE_ADDR", "localhost:50052") // NEW
 
 	db, err := pgxpool.New(context.Background(), dbURL)
 	if err != nil {
@@ -81,7 +82,16 @@ func main() {
 	}
 	log.Println("NATS consumer started")
 
-	registerUC := usecase.NewRegisterUseCase(userRepo)
+	// NEW
+	orderClient, err := grpchandler.NewOrderClient(orderServiceAddr)
+	if err != nil {
+		log.Printf("Warning: failed to connect to order service: %v", err)
+		orderClient = nil
+	} else {
+		log.Println("Order Service client connected")
+	}
+
+	registerUC := usecase.NewRegisterUseCase(userRepo, orderClient)
 	loginUC := usecase.NewLoginUseCase(userRepo)
 	profileUC := usecase.NewProfileUseCase(userRepo, redisCache)
 

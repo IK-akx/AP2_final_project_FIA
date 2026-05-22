@@ -56,3 +56,15 @@ func (s *BalanceSvc) GetTransactionHistory(ctx context.Context, userID uuid.UUID
 	}
 	return s.balanceRepo.GetTransactionHistory(ctx, userID, page, limit)
 }
+
+// InitBalance
+func (s *BalanceSvc) InitBalance(ctx context.Context, userID uuid.UUID) error {
+	_, err := s.balanceRepo.GetUserBalance(ctx, userID)
+	if err == nil {
+		return nil
+	}
+
+	description := "Initial balance for new user"
+	_, err = s.balanceRepo.TopUpBalance(ctx, userID, 1000.00, description)
+	return err
+}

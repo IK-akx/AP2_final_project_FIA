@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"errors"
+	"log"
 	"strings"
 	"time"
 
@@ -18,12 +19,20 @@ var (
 	ErrEmptyField   = errors.New("required field is empty")
 )
 
-type RegisterUseCase struct {
-	repo ports.UserRepository
+type OrderServiceClient interface {
+	InitBalance(ctx context.Context, userID string) error
 }
 
-func NewRegisterUseCase(repo ports.UserRepository) *RegisterUseCase {
-	return &RegisterUseCase{repo: repo}
+type RegisterUseCase struct {
+	repo        ports.UserRepository
+	orderClient OrderServiceClient // NEW
+}
+
+func NewRegisterUseCase(repo ports.UserRepository, orderClient OrderServiceClient) *RegisterUseCase {
+	return &RegisterUseCase{
+		repo:        repo,
+		orderClient: orderClient,
+	}
 }
 
 func (uc *RegisterUseCase) Execute(ctx context.Context, email, password, firstName, lastName string) (*domain.User, error) {
@@ -58,6 +67,13 @@ func (uc *RegisterUseCase) Execute(ctx context.Context, email, password, firstNa
 
 	if err := uc.repo.Save(ctx, user); err != nil {
 		return nil, err
+	}
+
+	// NEW
+	if uc.orderClient != nil {
+		if err := uc.orderClient.InitBalance(ctx, user.ID); err != nil {
+			log.Printf("Warning: failed to init balance for user %s: %v", user.ID, err)
+		}
 	}
 
 	return &user, nil
